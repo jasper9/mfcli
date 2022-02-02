@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -9,14 +10,43 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gregdel/pushover"
 )
 
 const check_dir string = "/tmp/mfchecks/"
+const thresholdSecs_Warning int = 5
+const thresholdSecs_Critical int = 120
+
+type Settings struct {
+	App_key       string `json:"app_key"`
+	Recipient_key string `json:"recipient_key"`
+}
+
+var settings Settings
 
 func main() {
+	jsonFile, err := os.Open("config.json")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer jsonFile.Close()
+
+	// read our opened jsonFile as a byte array.
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	// we initialize our Users array
+	//var users Users
+
+	// we unmarshal our byteArray which contains our
+	// jsonFile's content into 'users' which we defined above
+	json.Unmarshal(byteValue, &settings)
+
+	app := pushover.New(settings.App_key)
+	recipient := pushover.NewRecipient(settings.Recipient_key)
 
 	newpath := filepath.Join(check_dir)
-	err := os.MkdirAll(newpath, os.ModePerm)
+	err = os.MkdirAll(newpath, os.ModePerm)
 
 	// https://stackoverflow.com/questions/14668850/list-directory-in-go
 	files, err := ioutil.ReadDir(check_dir)
@@ -50,6 +80,23 @@ func main() {
 		agoSecs = secsNow - secsCheck[0]
 		//fmt.Println(filename.Name() + " - " + string(secsNow) + " - " + string(secsCheck[0]) + " - " + string(ago))
 		fmt.Printf("%s -  %d - %d secs (%d minutes)\n", filename.Name(), secsNow, agoSecs, agoSecs/60)
+
+		if agoSecs > thresholdSecs_Warning {
+
+			s := strings.Split(filename.Name(), ".")
+			fmt.Printf("******* WARNING: %s *******\n", s[0])
+
+			msg := "WARNING: " + s[0] + " has not checked in"
+			message := pushover.NewMessage(msg)
+
+			// Send the message to the recipient
+			_, err := app.SendMessage(message, recipient)
+			if err != nil {
+				log.Panic(err)
+			}
+
+		}
+
 	}
 
 }
