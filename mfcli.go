@@ -15,7 +15,7 @@ import (
 )
 
 const check_dir string = "/tmp/mfchecks/"
-const thresholdSecs_Warning int = 5
+const thresholdSecs_Warning int = 70
 const thresholdSecs_Critical int = 120
 
 type Settings struct {
@@ -26,9 +26,12 @@ type Settings struct {
 var settings Settings
 
 func main() {
-	jsonFile, err := os.Open("config.json")
+	//jsonFile, err := os.Open("config.json")
+	jsonFile, err := os.Open("/home/josh/.mf/mfcli.config")
+
 	if err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 	defer jsonFile.Close()
 
