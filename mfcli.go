@@ -58,12 +58,7 @@ func main() {
 	}
 
 	for _, filename := range files {
-		//buf := bytes.NewBuffer(nil)
-		// https://stackoverflow.com/questions/13514184/how-can-i-read-a-whole-file-into-a-string-variable
-		//b, err := ioutil.ReadFile(check_dir + filename.Name()) // just pass the file name
-		//if err != nil {
-		//	fmt.Print(err)
-		//}
+
 		secsCheck, err := readFile(check_dir + filename.Name())
 		if err != nil {
 			panic(err)
@@ -73,18 +68,15 @@ func main() {
 		var secsNow, agoSecs int
 		now := time.Now() // current local time
 		secsNow = int(now.Unix())
-		//secsCheck := binary.BigEndian.Uint64(b)
-		//secsCheck = int(b)
-		//secsCheck, _ = strconv.Atoi(string(b))
-		//secsCheck = int(b)
-
-		//secsCheck, err := ReadInts(strings.NewReader(b))
-
 		agoSecs = secsNow - secsCheck[0]
 		//fmt.Println(filename.Name() + " - " + string(secsNow) + " - " + string(secsCheck[0]) + " - " + string(ago))
 		fmt.Printf("%s -  %d - %d secs (%d minutes)\n", filename.Name(), secsNow, agoSecs, agoSecs/60)
 
+		// TODO: implement a critical time period too.
 		if agoSecs > thresholdSecs_Warning {
+
+			// TODO: check when the last notification was sent
+			// TODO: have a duration of wait time between notifications
 
 			s := strings.Split(filename.Name(), ".")
 			fmt.Printf("******* WARNING: %s *******\n", s[0])
@@ -98,7 +90,11 @@ func main() {
 				log.Panic(err)
 			}
 
+			// TODO: keep track of when the last notification was sent
+
 		}
+
+		// TODO: implement a recovery alert when it goes from bad to good
 
 	}
 
